@@ -43,14 +43,14 @@ export const createDependenciesPattern = ()=>{
 
 export const getConnectorRegistry = (resource: any[])=>{
     let resourcesPath = workspaceFolder + '\\crmIntegrationConnectorExporter\\'
-    let resources: any = fs.readdirSync(resourcesPath);
+    let resources: any = fs.readdirSync(resourcesPath,);
     
     const trash: string[] = [".classpath", ".meta", ".project", ".settings", "artifact.xml", "pom.xml"];
     const filteredResources: string[] = resources.filter((item: string) => !trash.includes(item));
     
     filteredResources.forEach((resource: string)=> {
         let finalResourceName = resource.split('.')[0] 
-        variablesObject.registry.push({finalResourceName, resource: 'resource', resourceFile: resource})               
+        variablesObject.resources.push({finalResourceName, resource: 'resource', resourceFile: resource})               
     });
 }
 

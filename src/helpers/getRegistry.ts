@@ -1,8 +1,17 @@
 import {variablesObject, VariablesObject} from "./configVariablesObject";
-import * as builder from './builder'
+import * as builder from './builder';
+import * as fs from 'fs-extra'
+import * as vscode from 'vscode'
+import { findFileOrFolderWith } from "./findFiles";
+
+let workspaceFolders = vscode.workspace.workspaceFolders;
+let workspaceFolder = '';
+if (workspaceFolders && workspaceFolders.length > 0) {
+    workspaceFolder = workspaceFolders[0].uri.fsPath;
+} 
 
 
-export const pomContent = (variablesObject: VariablesObject, properties: string, dependencies: string)=>{
+export const pomContent = (properties: any, dependencies: any)=>{
     let xml = `<?xml version="1.0" encoding="UTF-8"?>
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <modelVersion>4.0.0</modelVersion>
@@ -117,102 +126,13 @@ export const artifactContent = (artifacts: string)=>{
   return xml
 }
 
-export const createPom = (name)=>{
-  `<?xml version="1.0" encoding="UTF-8"?>
-  <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-    <modelVersion>4.0.0</modelVersion>
-    <groupId>br.com.intelbras.crm</groupId>
-    <artifactId>crmIntegration</artifactId>
-    <version>1.0.0</version>
-    <packaging>pom</packaging>
-    <name>crmIntegration</name>
-    <description>crmIntegration</description>
-    <modules>
-      <module>${name}}</module>
-      <module>crmIntegrationConnectorExporter</module>
-      <module>crmIntegrationConfigs</module>
-      <module>crmIntegrationCompositeExporter</module>
-    </modules>
-    <build />
-    <profiles>
-      <profile>
-        <id>Solution</id>
-        <build>
-          <plugins>
-            <plugin>
-              <artifactId>maven-eclipse-plugin</artifactId>
-              <version>2.9</version>
-              <configuration>
-                <buildcommands />
-                <projectnatures>
-                  <projectnature>org.wso2.developerstudio.eclipse.mavenmultimodule.project.nature</projectnature>
-                </projectnatures>
-              </configuration>
-            </plugin>
-          </plugins>
-        </build>
-      </profile>
-      <profile>
-        <id>Docker</id>
-        <build>
-          <plugins>
-            <plugin>
-              <artifactId>maven-eclipse-plugin</artifactId>
-              <version>2.9</version>
-              <configuration>
-                <buildcommands />
-                <projectnatures>
-                  <projectnature>org.wso2.developerstudio.eclipse.mavenmultimodule.project.nature</projectnature>
-                </projectnatures>
-              </configuration>
-            </plugin>
-          </plugins>
-        </build>
-      </profile>
-      <profile>
-        <id>Kubernetes</id>
-        <build>
-          <plugins>
-            <plugin>
-              <artifactId>maven-eclipse-plugin</artifactId>
-              <version>2.9</version>
-              <configuration>
-                <buildcommands />
-                <projectnatures>
-                  <projectnature>org.wso2.developerstudio.eclipse.mavenmultimodule.project.nature</projectnature>
-                </projectnatures>
-              </configuration>
-            </plugin>
-          </plugins>
-        </build>
-      </profile>
-      <profile>
-        <activation>
-          <activeByDefault>true</activeByDefault>
-        </activation>
-        <build>
-          <plugins>
-            <plugin>
-              <artifactId>maven-eclipse-plugin</artifactId>
-              <version>2.9</version>
-              <configuration>
-                <buildcommands />
-                <projectnatures>
-                  <projectnature>org.wso2.developerstudio.eclipse.mavenmultimodule.project.nature</projectnature>
-                </projectnatures>
-              </configuration>
-            </plugin>
-          </plugins>
-        </build>
-      </profile>
-    </profiles>
-  </project>
-  `
+export const createPom = ()=>{
+  let dependencies = builder.createDependenciesPattern()
+  let properties = builder.createPropertiesPattern();
 
-  const dependencies = builder.createDependenciesPattern();
-  // const preoperties = create()
-  
-  // pomContent(variablesObject, properties, dependencies)
+  let content = pomContent(dependencies, properties);
 
+  let folder = findFileOrFolderWith(workspaceFolder, 'CompositeExporter');
+
+  fs.writeFileSync(folder + '\\pom.xml', content)
 }

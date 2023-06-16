@@ -19,8 +19,6 @@ export type VariablesObject ={
     description: string,
     groupId: string,
     resources: {finalResourceName: string, resource: string, resourceFile: string}[],
-    artifacts: object[],
-    registry: object[],
     connectorRegistry: object[]
 }
 
@@ -30,8 +28,6 @@ export const variablesObject: VariablesObject = {
     description: 'teste',
     groupId: "br.com.intelbras.crm",
     resources: [],
-    artifacts: [],
-    registry: [],
     connectorRegistry: []
 }
 

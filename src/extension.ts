@@ -10,6 +10,7 @@ import * as builder from './helpers/builder'
 import path from 'path'
 import * as fs from 'fs-extra'
 import * as registry from './helpers/getRegistry'
+import { workerData } from 'worker_threads';
 
 
 export function activate(context: vscode.ExtensionContext) {
