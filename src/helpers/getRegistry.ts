@@ -1,4 +1,4 @@
-import {variablesObject, VariablesObject} from "./configVariablesObject";
+import {createVariablesObject, variablesObject, VariablesObject} from "./configVariablesObject";
 import * as builder from './builder';
 import * as fs from 'fs-extra'
 import * as vscode from 'vscode'
@@ -127,12 +127,17 @@ export const artifactContent = (artifacts: string)=>{
 }
 
 export const createPom = ()=>{
+  createVariablesObject()
   let dependencies = builder.createDependenciesPattern()
   let properties = builder.createPropertiesPattern();
 
-  let content = pomContent(dependencies, properties);
+  // console.clear()
+  console.log('Criação de pom para ', properties.length, 'items')
+  let content = pomContent(properties, dependencies);
 
   let folder = findFileOrFolderWith(workspaceFolder, 'CompositeExporter');
 
   fs.writeFileSync(folder + '\\pom.xml', content)
+  
+  vscode.window.showInformationMessage("POM modificado com sucesso");
 }

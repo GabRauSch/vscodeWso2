@@ -1,6 +1,6 @@
-/*---------------------------------------------------------
- * Copyright (C) Microsoft Corporation. All rights reserved.
- *--------------------------------------------------------*/
+/*-------------------------------------
+|	NOT AN OFICIAL PRODUCT FROM WSO2    |
+---------------------------------------*/
 
 import * as vscode from 'vscode';
 import * as createCode from './helpers/createCode'
@@ -11,12 +11,15 @@ import path from 'path'
 import * as fs from 'fs-extra'
 import * as registry from './helpers/getRegistry'
 import { workerData } from 'worker_threads';
+import { createVariablesObject } from './helpers/configVariablesObject';
 
 
 export function activate(context: vscode.ExtensionContext) {
 
+	initialize()
 	initializeQuestion()
 	fileCreationEventListener()
+	fileDeleteEventListener()
 
 	let autoComplete = autocompleteProviders()
 	
@@ -24,12 +27,15 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 const initialize = ()=>{
+	createVariablesObject()
 	// verificar existencia de ExtraResources/wso2extension.json
 		// criar o arquivo ou dar manutenção nele com base nos arquivos da api, sequence e etc
 	// criar o pom.xml com base na extensão
 	// criar o artifact.xml com base na extensão
 	// preencher a variavel "sequencesArray" e as outras de mesmo estilo
 	// preencher properties e dependencies
+	
+	console.log('Extensão inciada com sucesso')
 }
 
 export const pomCreationWarn = async (type: string | undefined, item: string) => {
@@ -38,29 +44,28 @@ export const pomCreationWarn = async (type: string | undefined, item: string) =>
   };
 
   const selectedChoice = await vscode.window.showInformationMessage(
-    `criar as informações do pom e artifact par a cração de ${type} ${item}`,
+    `criar as informações do pom e artifact para alteração de ${type} ${item}`,
     buttonChoice
   );
 
   if (selectedChoice === buttonChoice) {
 	registry.createPom()
-    vscode.window.showInformationMessage("POM modificado com sucesso");
   }
 };
 
 const initializeQuestion = async () => {
-	const buttonChoice: vscode.MessageItem = {
-	  title: 'Inicializar'
-	};
+	const initializeWithPom: vscode.MessageItem = {
+		title: "Iniciar e criar o POM"
+	}
   
 	const selectedChoice = await vscode.window.showWarningMessage(
 	  `Inicilize a extensão`,
-	  buttonChoice
+	  initializeWithPom
 	);
-  
-	if (selectedChoice === buttonChoice) {
+	if (selectedChoice === initializeWithPom){
 		initialize()
-	  	vscode.window.showInformationMessage("extensão iniciada com sucesso");
+		registry.createPom()
+		vscode.window.showInformationMessage("Extensão iniciada com sucesso")
 	}
 };
 
@@ -69,22 +74,63 @@ export const fileCreationEventListener = ()=>{
 		const createdFiles = event.files;
 
 		let fileName = ''
-		let type;
+		let type: 'api'|  'sequence' | 'local-entries' | 'message-processors' | 'message-stores' | 'tasks' | 'templates' | 'Desconhecido' = 'api'
+		console.log('criação do arquivo')
         for (const file of createdFiles) {
-			
+			console.log(file.fsPath)
 			fileName = path.basename(file.fsPath);
 			type = files.getFileType(file.fsPath);
 			
 			let structure = '';
-			switch(type){
-				case 'api': 
-					structure = builder.createApi({name: fileName, type});
-					builder.appendDocumentation(fileName, type)
-					break;
-			}
+			console.log(type)
+			structure = builder.createResource[type]({name: fileName, type});
+			builder.appendDocumentation(fileName, type)
 			fs.writeFileSync(file.fsPath, structure);
         }
+		
+		console.log('warning devido a criação de', fileName)
 		pomCreationWarn(type, fileName)
+	});
+}
+
+export const fileDeleteEventListener = ()=>{
+	vscode.workspace.onDidDeleteFiles(event =>{
+		console.log('oi')
+		const deletedFiles = event.files;
+
+
+		console.log(deletedFiles)
+
+		let fileName = ''
+		let type;
+		console.log('Deleção de arquivo')
+        for (const file of deletedFiles) {
+			fileName = path.basename(file.fsPath);
+			type = files.getFileType(file.fsPath);
+        }
+		console.log('warning devido a deleção de', fileName)
+		pomCreationWarn(type, fileName)
+	});
+}
+
+export const fileChangeEventListener = ()=>{
+	vscode.workspace.onDidRenameFiles(event =>{
+		console.log('oi')
+		const changedFiles = event.files;
+
+		console.log(changedFiles)
+
+		// console.log(changedFiles)
+
+		// let fileName = ''
+		// let type;
+		// console.log('Deleção de arquivo')
+        // for (const file of changedFiles) {
+		// 	fileName = path.basename(file.fsPath);
+		// 	type = files.getFileType(file.fsPath);
+        // }
+		// console.log('warning devido a deleção de', fileName)
+		// pomCreationWarn(type, fileName)
 	});
 }
 
@@ -130,7 +176,7 @@ export const autocompleteProviders = ()=>{
 				return salesforcerestReturn
 			}
 		},
-		'.' // triggered whenever a '.' is being typed
+		'.' 
 	);
 
 	const wso2 = vscode.languages.registerCompletionItemProvider('xml', {
@@ -152,7 +198,7 @@ export const autocompleteProviders = ()=>{
 
 			}
 		},
-		'.' // triggered whenever a '.' is being typed
+		'.' 
 	);
 
 	return [provider1, wso2, salesforce]

@@ -65,12 +65,14 @@ export const createArtifact = (resources: any[])=>{
     return data
 }
 
-export const createApi = (documentation?: any)=>{
-    let nameWVersion = documentation.name?.replace('.xml', '');
-    let name = nameWVersion.replace('_v1', '');
-    let context = name.replace('API', '');
-
-    let api = `<?xml version="1.0" encoding="UTF-8"?>
+export const createResource: any = {
+    api: (documentation?: any)=>{
+        let nameWVersion = documentation.name?.replace('.xml', '');
+        let name = nameWVersion.replace('_v1', '');
+        let context = name.replace('API', '');
+    
+        let api = 
+`<?xml version="1.0" encoding="UTF-8"?>
 <api context="/${context ? context.toLowerCase() : ''}" name="${name}" xmlns="http://ws.apache.org/ns/synapse">
     <resource methods="GET" uri-template="/">
         <inSequence>
@@ -83,13 +85,13 @@ export const createApi = (documentation?: any)=>{
         <faultSequence/>
     </resource>
 </api>`
-
-
-    return api
-}
-
-export const createSequence = (documentation: any)=>{
-//
+    
+    
+        return api
+    },
+    sequence: (documentation: any)=>{
+        //
+    }
 }
 
 export const createDataService = (documentation: any)=>{

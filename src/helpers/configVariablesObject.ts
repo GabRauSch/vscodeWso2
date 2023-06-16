@@ -33,6 +33,7 @@ export const variablesObject: VariablesObject = {
 
 export const createVariablesObject = (root?: string) =>{
 
+    variablesObject.resources = [];
     getContentFromSynapseConfig()
     getContentFromResources()
 
@@ -50,7 +51,27 @@ const normalizeName = (name: string) =>{
   return normalizedName;
 } 
 
-const getContentFromResources = ()=>{    
+const getContentFromResources = ()=>{   
+    console.log('Pegando conteudos do resources (transforms, datamappers, etc...)')
+    let resourcesPath = workspaceFolder + '\\crmIntegrationRegistryResources\\'
+    let resources: any = fs.readdirSync(resourcesPath);
+    
+    const trash: string[] = [".classpath", ".meta", ".project", ".settings", "artifact.xml", "pom.xml"];
+    const filteredResources: string[] = resources.filter((item: string) => !trash.includes(item));
+    
+    filteredResources.forEach((resource: string)=> {
+        let finalResourceName = resource.split('.')[0] 
+        variablesObject.resources.push({finalResourceName, resource: 'resource', resourceFile: resource})               
+    });
+
+    console.log('--------- sucesso ---------)') 
+}
+
+
+
+const getContentFromSynapseConfig = ()=>{
+    console.log('Pegando conteudos do Synapse config (APIS, Sequences, etc...)')
+    
     let resourcesPath = workspaceFolder + '\\crmIntegrationConfigs\\src\\main\\synapse-config'
     let resources: any = fs.readdirSync(resourcesPath);
 
@@ -64,26 +85,14 @@ const getContentFromResources = ()=>{
             let xmlFile = fs.readFileSync(folderPath + '\\' + resourceFile)
             xmlReader.parseString(xmlFile, (err, result)=>{
                 let finalResourceName: string;
-                finalResourceName = (result[resourceName].$.key) ? result[resourceName].$.key :  result[resourceName].$.name;
-                variablesObject.resources.push({finalResourceName, resource, resourceFile})
+                if(result[resourceName].$){
+                    // TODO: VERIFICAR SE O CONTEUDO REALMENTE É UMA API PARA EVITAR ERROS
+                    finalResourceName = (result[resourceName].$.key) ? result[resourceName].$.key :  result[resourceName].$.name;
+                    variablesObject.resources.push({finalResourceName, resource, resourceFile})
+                }
             })
         })
     });
 
-}
-
-
-
-const getContentFromSynapseConfig = ()=>{
-    let resourcesPath = workspaceFolder + '\\crmIntegrationRegistryResources\\'
-    let resources: any = fs.readdirSync(resourcesPath);
-    
-    const trash: string[] = [".classpath", ".meta", ".project", ".settings", "artifact.xml", "pom.xml"];
-    const filteredResources: string[] = resources.filter((item: string) => !trash.includes(item));
-    
-    filteredResources.forEach((resource: string)=> {
-        let finalResourceName = resource.split('.')[0] 
-        variablesObject.resources.push({finalResourceName, resource: 'resource', resourceFile: resource})               
-    });
-
+    console.log('--------- sucesso ---------)')
 }

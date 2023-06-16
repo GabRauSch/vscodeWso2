@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 
-export let fnFunctions: String[] = ['fn:concat("")', "fn:substring(1, ''\, '')"]
+export let fnFunctions: String[] = ['fn:concat("")', 'fn:substring("")']
 export let propertiesArray: String[] = ["json-eval($)", "$body", '$trp:', '$ctx:', ...fnFunctions ]
 export let apiArray: Object[] = [];
 export let sequencesArray: String[] = ["sequence", "another"]
