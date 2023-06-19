@@ -90,7 +90,23 @@ export const createResource: any = {
         return api
     },
     sequence: (documentation: any)=>{
-        //
+        let nameWVersion = documentation.name?.replace('.xml', '');
+        let sequence = 
+`<?xml version="1.0" encoding="UTF-8"?>
+<sequence name="${nameWVersion}" trace="disable" xmlns="http://ws.apache.org/ns/synapse">
+
+</sequence>`
+    return sequence
+    },
+    templates: (documentation: any)=>{
+        let nameWVersion = documentation.name?.replace('.xml', '');
+        let sequence = 
+`<?xml version="1.0" encoding="UTF-8"?>
+<template name="${nameWVersion}" xmlns="http://ws.apache.org/ns/synapse">
+    <parameter defaultValue="" isMandatory="false" name="origin"/>
+
+</sequence>`
+    return sequence
     }
 }
 

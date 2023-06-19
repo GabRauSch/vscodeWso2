@@ -37,6 +37,8 @@ export const createVariablesObject = (root?: string) =>{
     getContentFromSynapseConfig()
     getContentFromResources()
 
+    console.log(variablesObject.resources);
+
     return variablesObject;
 }
 

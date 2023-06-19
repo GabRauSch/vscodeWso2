@@ -16,6 +16,11 @@
   "contributes": {
     "commands": [
       {
+        "command": "propertyExtension.retrieveProperties",
+        "category": "propertyExtension",
+        "title": "getProperties"
+      },
+      {
         "command": "wso2-vscode-extension.generateRegistry",
         "category": "wso2",
         "title": "generateRegistry"

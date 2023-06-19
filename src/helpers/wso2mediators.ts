@@ -1,7 +1,13 @@
 import * as vscode from 'vscode'
+export let propertiesArray:  String[]= ["json-eval($)", "$body", '$trp:', '$ctx:'];
+export let properties: any = (pos: Number)=>"${"+pos+"|"+propertiesArray.toString()+"|}";
+export const setPropertiesArray = (userSettedPropertiesArray: string[])=>{
+    propertiesArray = [...userSettedPropertiesArray, "json-eval($)", "$body", '$trp:', '$ctx:', ...fnFunctions ];
+    properties = (pos: Number)=>"${"+pos+"|"+propertiesArray.toString()+"|}";
+};
+
 
 export let fnFunctions: String[] = ['fn:concat("")', 'fn:substring("")']
-export let propertiesArray: String[] = ["json-eval($)", "$body", '$trp:', '$ctx:', ...fnFunctions ]
 export let apiArray: Object[] = [];
 export let sequencesArray: String[] = ["sequence", "another"]
 export let templateArray: String[] = ["template1", "template2"]
@@ -13,12 +19,11 @@ const soaps = Array.from({length: 12}, (_, index) => "soap" + (12 - index));
 const headersArray = ["Authorization", "To", "ApplicationName", "Content-type", "Content-length", " "]
 
 const expression = (pos: Number)=>"${"+pos+"|expression, value|}"
+const level = (pos: Number)=>"${"+pos+"|custom, full, simple|}"
 const mediaType = (pos: Number)=>"${"+pos+"|json, xml|}"
 const xmlJson = (pos: Number)=>"${"+pos+"|<soapenv:Body></soapenv:Body>, {\n\"name\":$1\n}|}";
-const properties = (pos: Number)=>"${"+pos+"|"+propertiesArray.toString()+"|}"
-const level = (pos: Number)=>"${"+pos+"|custom, full, simple|}"
 const key = (pos: Number)=>"${"+pos+"|"+sequencesArray.toString()+"|}"
-const scope = (pos: Number)=>"${"+pos+"|default, env, transport, axis2|}";
+const scope = (pos: Number)=>"${"+pos+"|default,env,transport,axis2|}";
 const method = (pos: Number)=>"${"+pos+"|"+methods.toString()+"|}"
 const soap = (pos: Number)=>"${"+pos+"|"+soaps+"|}"
 const template = (pos: Number)=> "${"+pos+"|"+templateArray.toString()+"|}"
@@ -27,9 +32,14 @@ const xslt = (pos: Number)=> "${"+pos + "|" + xsltArray.map((xslt) => xslt.split
 const header = (pos: Number)=> "${"+pos+"|"+headersArray.toString()+"|}"
 
 
-
-
-export const wso2Mediators =  [
+export let wso2Mediators: any = [];
+export let getWsoMediatorsValues = ()=>{
+    wso2Mediators = 
+    [
+    {
+        mediator: "property",
+        structure: `<property name="\${1}" ${expression(2)}="${properties(3)}" scope="${scope(4)}"/>`
+    },
     {
         mediator: "log",
         structure: `<log level="${level(1)}">\n\t<property name="\${2}" ${expression(3)}="${properties(4)}\${5}"/>\n</log>`
@@ -53,10 +63,6 @@ export const wso2Mediators =  [
     {
         mediator: "arg",
         structure: `<arg evaluator="${mediaType(1)}" expression="${properties(2)}/>`
-    },
-    {
-        mediator: "property",
-        structure: `<property name="\${1}" ${expression(2)}="${properties(3)}" scope="${scope(4)}"/>`
     },
     {
         mediator: "sequence",
@@ -186,7 +192,9 @@ export const wso2Mediators =  [
 `<propertyGroup>
     \${1}
 </propertyGroup>`
+    },{
+        mediator: '$ctx:',
+        structure: `"${properties(1)}"`
     }
-]
-
-export default wso2Mediators
+    ]
+}

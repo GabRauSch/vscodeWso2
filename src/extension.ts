@@ -4,7 +4,7 @@
 
 import * as vscode from 'vscode';
 import * as createCode from './helpers/createCode'
-import wso2Mediators from './helpers/wso2mediators'
+import {wso2Mediators, getWsoMediatorsValues, propertiesArray, setPropertiesArray, properties } from './helpers/wso2mediators'
 import * as files from './helpers/findFiles';
 import * as builder from './helpers/builder'
 import path from 'path'
@@ -12,14 +12,15 @@ import * as fs from 'fs-extra'
 import * as registry from './helpers/getRegistry'
 import { workerData } from 'worker_threads';
 import { createVariablesObject } from './helpers/configVariablesObject';
+import * as xmlReader from 'xml2js'
 
 
 export function activate(context: vscode.ExtensionContext) {
 
-	initialize()
 	initializeQuestion()
 	fileCreationEventListener()
 	fileDeleteEventListener()
+	getWsoMediatorsValues()
 
 	let autoComplete = autocompleteProviders()
 	
@@ -65,6 +66,9 @@ const initializeQuestion = async () => {
 	if (selectedChoice === initializeWithPom){
 		initialize()
 		registry.createPom()
+		vscode.window.showInformationMessage("Extensão iniciada com sucesso")
+	} else{
+		initialize()
 		vscode.window.showInformationMessage("Extensão iniciada com sucesso")
 	}
 };
@@ -137,11 +141,12 @@ export const fileChangeEventListener = ()=>{
 export const autocompleteProviders = ()=>{
 	const provider1 = vscode.languages.registerCompletionItemProvider('xml', {
 		provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext) {
+			setProperties()
 			const salesforceprefix = new vscode.CompletionItem('salesforcerest')
 			const wso2prefix = new vscode.CompletionItem('wso2')	
 
 			let completionItems: vscode.CompletionItem[]= []
-			wso2Mediators.forEach((el)=>{
+			wso2Mediators.forEach((el: any)=>{
 				const mediator = new vscode.CompletionItem(el.mediator);
 				mediator.insertText = createCode.createWso2Snippet(el.structure)
 				completionItems.push(mediator)
@@ -152,6 +157,11 @@ export const autocompleteProviders = ()=>{
 				salesforceprefix,
 				wso2prefix
 			];
+		},
+		resolveCompletionItem(item: vscode.CompletionItem, token: vscode.CancellationToken){
+			
+
+			return item;
 		}
 	});
 
@@ -187,7 +197,7 @@ export const autocompleteProviders = ()=>{
 				}
 
 				let wso2Return: vscode.CompletionItem[] = []
-				wso2Mediators.forEach((el)=>{
+				wso2Mediators.forEach((el: any)=>{
 					let item = new vscode.CompletionItem(el.structure, vscode.CompletionItemKind.Method)
 					item.insertText = new vscode.SnippetString(`${el.structure}`)
 						
@@ -202,4 +212,83 @@ export const autocompleteProviders = ()=>{
 	);
 
 	return [provider1, wso2, salesforce]
+}
+
+const setProperties = () => {
+	const currentFileText = vscode.window.activeTextEditor;
+	let unsavedContent = '';
+	
+	if (currentFileText) {
+	  const document = currentFileText.document;
+	  unsavedContent = document.getText();
+	}
+
+	const propertyRegex = /<property[^>]*\s+name="([^"]*)"[^>]*\s+scope="([^"]*)"/g;
+	const propertyNames: string[] = [];
+	let match;
+	while ((match = propertyRegex.exec(unsavedContent)) !== null) {
+	  const name = match[1];
+	  const scope = match[2];
+	
+	  let scopePrefix;
+	  switch (scope) {
+		case 'default':
+		  scopePrefix = '$ctx:';
+		  break;
+		case 'transport':
+		  scopePrefix = '$trp:';
+		  break;
+		case 'env':
+		  scopePrefix = '$ctx:';
+		  break;
+		case 'axis2':
+		  scopePrefix = '$axis2:';
+		  break;
+		default:
+		  scopePrefix = '';
+	  }
+	  propertyNames.push(scopePrefix + match[1]);
+	}
+
+
+	// const propertyRegex = /<property\s+name="([^"]*)"/g;
+	// const propertyNames = [];
+	// let match;
+	// while ((match = propertyRegex.exec(unsavedContent)) !== null) {
+	// 	propertyNames.push(match[1]);
+	// }
+	console.log(propertyNames)
+	
+	setPropertiesArray(propertyNames)
+	getWsoMediatorsValues()
+
+	// let data: any = [];
+	// xmlReader.parseString(xmlFile, (err, result) => {
+	// 	if (result) {
+			
+	// 		console.log('hello', result.api.resource[0].inSequence[0].property)
+	// 		result.api.resource[0].inSequence[0].property?.forEach((el: any) => {
+	// 			let scope = '';
+	// 			switch (el.$.scope) {
+	// 				case 'default':
+	// 					scope = '$ctx:';
+	// 					break;
+	// 				case 'transport':
+	// 					scope = '$trp:';
+	// 					break;
+	// 				case 'env':
+	// 					scope = '$ctx:';
+	// 					break;
+	// 				case 'axis2':
+	// 					scope = '$axis2:';
+	// 					break;
+	// 			}
+	// 			data.unshift(scope + el.$.name)
+				
+	// 		});
+	// 	}
+	// });
+	// // console.log(propertiesArray)
+	// // console.log(propertiesArray)
+
 }
