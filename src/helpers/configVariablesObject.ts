@@ -19,7 +19,8 @@ export type VariablesObject ={
     description: string,
     groupId: string,
     resources: {finalResourceName: string, resource: string, resourceFile: string}[],
-    connectorRegistry: object[]
+    connectorRegistry: object[],
+    version: string
 }
 
 export const variablesObject: VariablesObject = {
@@ -28,7 +29,8 @@ export const variablesObject: VariablesObject = {
     description: 'teste',
     groupId: "br.com.intelbras.crm",
     resources: [],
-    connectorRegistry: []
+    connectorRegistry: [],
+    version: 'v1'
 }
 
 export const createVariablesObject = (root?: string) =>{
@@ -81,20 +83,25 @@ const getContentFromSynapseConfig = ()=>{
         let resourceName = normalizeName(resource)
 
         let folderPath = resourcesPath + '\\' + resource;
+
         let resourceItem = fs.readdirSync(folderPath)
 
         resourceItem.forEach((resourceFile)=>{
-            let xmlFile = fs.readFileSync(folderPath + '\\' + resourceFile)
-            xmlReader.parseString(xmlFile, (err, result)=>{
-                let finalResourceName: string;
-                if(result[resourceName].$){
-                    // TODO: VERIFICAR SE O CONTEUDO REALMENTE É UMA API PARA EVITAR ERROS
-                    finalResourceName = (result[resourceName].$.key) ? result[resourceName].$.key :  result[resourceName].$.name;
-                    variablesObject.resources.push({finalResourceName, resource, resourceFile})
-                }
-            })
+            let finalPath = folderPath + '\\' + resourceFile;
+            let xmlFile = fs.readFileSync(finalPath)
+
+            console.log(xmlFile)
+            if(xmlFile.byteLength != 0){
+                xmlReader.parseString(xmlFile, (err, result)=>{
+                    let finalResourceName: string;
+                    if(result[resourceName].$){
+                        finalResourceName = (result[resourceName].$.key) ? result[resourceName].$.key :  result[resourceName].$.name;
+                        variablesObject.resources.push({finalResourceName, resource, resourceFile})
+                    }
+                })
+            }
         })
     });
 
-    console.log('--------- sucesso ---------)')
+    console.assert('--------- sucesso ---------)')
 }

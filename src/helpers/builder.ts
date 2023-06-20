@@ -54,9 +54,9 @@ export const getConnectorRegistry = (resource: any[])=>{
     });
 }
 
-export const createArtifact = (resources: any[])=>{
+export const createArtifact = ()=>{
     let data = "";
-    resources.forEach((resource)=>{
+    variablesObject.resources.forEach((resource)=>{
         data += 
 `\t<artifact name="${resource.finalResourceName}" groupId="${variablesObject.groupId}.${resource.resource}" version="1.0.0" type="synapse/${resource.resource}" serverRole="EnterpriseServiceBus">
 \t\t<file>src/main/synapse-config/${resource.resource}/${resource.resourceFile}</file>
@@ -107,6 +107,52 @@ export const createResource: any = {
 
 </sequence>`
     return sequence
+    },
+    'message-stores': (documentation: any)=>{
+        let name = documentation.name
+        if(name){
+            let nameWVersion = name.replace('.xml', '');
+
+            let queue = name.replace('Store', 'Queue')
+           
+            let messageStore = 
+`<?xml version="1.0" encoding="UTF-8"?>
+<messageStore class="org.apache.synapse.message.store.impl.jms.JmsStore" name="${nameWVersion}" xmlns="http://ws.apache.org/ns/synapse">
+    <parameter name="store.jms.destination">${variablesObject.name}-${queue}</parameter>
+    <parameter name="store.jms.username">$SYSTEM:USERNAME_AMQ</parameter>
+    <parameter name="store.jms.connection.factory">QueueConnectionFactory</parameter>
+    <parameter name="store.producer.guaranteed.delivery.enable">false</parameter>
+    <parameter name="store.jms.password">$SYSTEM:PASSWORD_AMQ</parameter>
+    <parameter name="store.jms.cache.connection">false</parameter>
+    <parameter name="java.naming.factory.initial">org.apache.activemq.jndi.ActiveMQInitialContextFactory</parameter>
+    <parameter name="java.naming.provider.url">$SYSTEM:CONEXAO_BROKER</parameter>
+    <parameter name="store.jms.JMSSpecVersion">1.1</parameter>
+</messageStore>`
+    
+            return messageStore
+        }
+    },
+    'message-processors': (documentation: any)=>{
+        let name = documentation.name
+        if(name){
+            let nameWVersion = name.replace('.xml', '');
+
+            let finalName = name.includes('MessageProcessor') ? name : nameWVersion + 'MessageProcessor';
+
+            let store = name.replace('Processor', 'Store')
+            let sequence = nameWVersion + 'Sequence'
+
+            let messageProcessor = 
+`<?xml version="1.0" encoding="UTF-8"?>
+<messageProcessor class="org.apache.synapse.message.processor.impl.sampler.SamplingProcessor" messageStore="${store}" name="${finalName}" xmlns="http://ws.apache.org/ns/synapse">
+    <parameter name="sequence">${sequence}</parameter>
+    <parameter name="interval">1000</parameter>
+    <parameter name="is.active">true</parameter>
+    <parameter name="concurrency">1</parameter>
+</messageProcessor>`
+
+        return messageProcessor
+        }
     }
 }
 
@@ -114,9 +160,6 @@ export const createDataService = (documentation: any)=>{
 //
 }
 
-export const createMessageProcessor = (documentation: any)=>{
-//
-}
 
 export const createLocalEntry = (documentation: any)=>{
 //
@@ -168,4 +211,14 @@ export const createWso2Json = (basedir: string, content = wso2Objectbase)=>{
     let jsonObject = prettier.format(rawJson, { parser: 'json' });
 
     fs.writeFile(basedir + '\\wso2extension.json', jsonObject)
+}
+
+export const assertFileName = (fileName: string, fileType: string)=>{
+    let transformedFile;
+    if(! fileName.toLowerCase().includes(fileType.toLowerCase())){
+        let transformedStr = fileType.charAt(0).toUpperCase() + fileName.slice(1);
+        transformedFile = fileName.replace('.xml', transformedStr)
+    }
+    console.log(transformedFile)
+    return transformedFile
 }

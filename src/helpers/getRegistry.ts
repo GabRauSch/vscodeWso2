@@ -121,8 +121,7 @@ export const artifactContent = (artifacts: string)=>{
   let xml = 
 `<?xml version="1.0" encoding="UTF-8"?>
   <artifacts>
-    ${artifacts}
-  </artifacts>`
+    ${artifacts}</artifacts>`
   return xml
 }
 
@@ -139,5 +138,18 @@ export const createPom = ()=>{
 
   fs.writeFileSync(folder + '\\pom.xml', content)
   
+  vscode.window.showInformationMessage("POM modificado com sucesso");
+}
+
+export const createArtifactSynapse = ()=>{
+  createVariablesObject();
+  let artifacts = builder.createArtifact()
+  let content = artifactContent(artifacts)
+
+  console.log('Criação de pom para ', artifacts.length, 'items')
+
+  let folder = findFileOrFolderWith(workspaceFolder, 'Configs')
+  fs.writeFileSync(folder + '\\artifact.xml', content)
+
   vscode.window.showInformationMessage("POM modificado com sucesso");
 }

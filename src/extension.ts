@@ -21,10 +21,15 @@ export function activate(context: vscode.ExtensionContext) {
 	fileCreationEventListener()
 	fileDeleteEventListener()
 	getWsoMediatorsValues()
+	fileChangeEventListener()
+
+	const registryCommand =  vscode.commands.registerCommand('wso2-vscode-extension.generateRegistry', ()=>{
+		registry.createPom()
+	})
 
 	let autoComplete = autocompleteProviders()
 	
-	context.subscriptions.push(...autoComplete);
+	context.subscriptions.push(...autoComplete, registryCommand);
 }
 
 const initialize = ()=>{
@@ -51,6 +56,7 @@ export const pomCreationWarn = async (type: string | undefined, item: string) =>
 
   if (selectedChoice === buttonChoice) {
 	registry.createPom()
+	registry.createArtifactSynapse()
   }
 };
 
@@ -66,6 +72,7 @@ const initializeQuestion = async () => {
 	if (selectedChoice === initializeWithPom){
 		initialize()
 		registry.createPom()
+		registry.createArtifactSynapse()
 		vscode.window.showInformationMessage("Extensão iniciada com sucesso")
 	} else{
 		initialize()
@@ -81,15 +88,19 @@ export const fileCreationEventListener = ()=>{
 		let type: 'api'|  'sequence' | 'local-entries' | 'message-processors' | 'message-stores' | 'tasks' | 'templates' | 'Desconhecido' = 'api'
 		console.log('criação do arquivo')
         for (const file of createdFiles) {
-			console.log(file.fsPath)
 			fileName = path.basename(file.fsPath);
+			let dirname = path.dirname(file.fsPath)
 			type = files.getFileType(file.fsPath);
 			
 			let structure = '';
-			console.log(type)
+			console.log('O tipo do arquivo criado foi', type)
 			structure = builder.createResource[type]({name: fileName, type});
-			builder.appendDocumentation(fileName, type)
-			fs.writeFileSync(file.fsPath, structure);
+
+			let finalFileName = dirname + '\\' + builder.assertFileName(fileName, type)
+
+			console.log(finalFileName)
+			// builder.appendDocumentation(fileName, type)
+			fs.writeFileSync(finalFileName, structure);
         }
 		
 		console.log('warning devido a criação de', fileName)
@@ -120,21 +131,17 @@ export const fileDeleteEventListener = ()=>{
 export const fileChangeEventListener = ()=>{
 	vscode.workspace.onDidRenameFiles(event =>{
 		console.log('oi')
-		const changedFiles = event.files;
+		const changedFiles = event.files;		
 
-		console.log(changedFiles)
-
-		// console.log(changedFiles)
-
-		// let fileName = ''
-		// let type;
-		// console.log('Deleção de arquivo')
-        // for (const file of changedFiles) {
-		// 	fileName = path.basename(file.fsPath);
-		// 	type = files.getFileType(file.fsPath);
-        // }
-		// console.log('warning devido a deleção de', fileName)
-		// pomCreationWarn(type, fileName)
+		let fileName = ''
+		let type;
+		console.log('Deleção de arquivo')
+        for (const file of changedFiles) {
+			fileName = path.basename(file.newUri.fsPath);
+			type = files.getFileType(file.newUri.fsPath);
+        }
+		console.log('warning devido a deleção de', fileName)
+		pomCreationWarn(type, fileName)
 	});
 }
 
@@ -249,46 +256,10 @@ const setProperties = () => {
 	  }
 	  propertyNames.push(scopePrefix + match[1]);
 	}
-
-
-	// const propertyRegex = /<property\s+name="([^"]*)"/g;
-	// const propertyNames = [];
-	// let match;
-	// while ((match = propertyRegex.exec(unsavedContent)) !== null) {
-	// 	propertyNames.push(match[1]);
-	// }
 	console.log(propertyNames)
 	
 	setPropertiesArray(propertyNames)
 	getWsoMediatorsValues()
 
-	// let data: any = [];
-	// xmlReader.parseString(xmlFile, (err, result) => {
-	// 	if (result) {
-			
-	// 		console.log('hello', result.api.resource[0].inSequence[0].property)
-	// 		result.api.resource[0].inSequence[0].property?.forEach((el: any) => {
-	// 			let scope = '';
-	// 			switch (el.$.scope) {
-	// 				case 'default':
-	// 					scope = '$ctx:';
-	// 					break;
-	// 				case 'transport':
-	// 					scope = '$trp:';
-	// 					break;
-	// 				case 'env':
-	// 					scope = '$ctx:';
-	// 					break;
-	// 				case 'axis2':
-	// 					scope = '$axis2:';
-	// 					break;
-	// 			}
-	// 			data.unshift(scope + el.$.name)
-				
-	// 		});
-	// 	}
-	// });
-	// // console.log(propertiesArray)
-	// // console.log(propertiesArray)
 
 }
