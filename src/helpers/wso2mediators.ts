@@ -18,10 +18,10 @@ const methods = ['get', 'post', 'put', 'delete', 'patch']
 const soaps = Array.from({length: 12}, (_, index) => "soap" + (12 - index));
 const headersArray = ["Authorization", "To", "ApplicationName", "Content-type", "Content-length", " "]
 
-const expression = (pos: Number)=>"${"+pos+"|expression, value|}"
-const level = (pos: Number)=>"${"+pos+"|custom, full, simple|}"
-const mediaType = (pos: Number)=>"${"+pos+"|json, xml|}"
-const xmlJson = (pos: Number)=>"${"+pos+"|<soapenv:Body></soapenv:Body>, {\n\"name\":$1\n}|}";
+const expression = (pos: Number)=>"${"+pos+"|expression,value|}"
+const level = (pos: Number)=>"${"+pos+"|custom,full,simple|}"
+const mediaType = (pos: Number)=>"${"+pos+"|json,xml|}"
+const xmlJson = (pos: Number)=>"${"+pos+"|<soapenv:Body></soapenv:Body>,{\n\"name\":$1\n}|}";
 const key = (pos: Number)=>"${"+pos+"|"+sequencesArray.toString()+"|}"
 const scope = (pos: Number)=>"${"+pos+"|default,env,transport,axis2|}";
 const method = (pos: Number)=>"${"+pos+"|"+methods.toString()+"|}"
@@ -30,6 +30,7 @@ const template = (pos: Number)=> "${"+pos+"|"+templateArray.toString()+"|}"
 const messageStore = (pos: Number) => "${"+pos+"|"+messageStores.toString()+"|}"
 const xslt = (pos: Number)=> "${"+pos + "|" + xsltArray.map((xslt) => xslt.split('/')[1].split('.')[0]).join(', ') + "|}";
 const header = (pos: Number)=> "${"+pos+"|"+headersArray.toString()+"|}"
+const elseMed = (pos: number) => "${"+pos+"|/>,></else>|}"
 
 
 export let wso2Mediators: any = [];
@@ -62,7 +63,7 @@ export let getWsoMediatorsValues = ()=>{
     },
     {
         mediator: "arg",
-        structure: `<arg evaluator="${mediaType(1)}" expression="${properties(2)}/>`
+        structure: `<arg evaluator="${mediaType(1)}" expression="${properties(2)}"/>`
     },
     {
         mediator: "sequence",
@@ -91,11 +92,19 @@ export let getWsoMediatorsValues = ()=>{
 </filter>`
     },
     {
-        mediator: "enrich",
+        mediator: "enrichBody",
         structure: 
 `<enrich>
-    <source type="\${1|property, body|}" property="${properties(2)}" clone="\${3|true, false|}" />
-    <target type="\${4|property , body|}" property="${properties(5)}" action="\${6|child,default|}"/>
+    <source type="body" clone="\${1|true, false|}" />
+    <target type="property" property="\${2}" action="\${6|child,default|}"/>
+</enrich>`
+    },
+    {
+        mediator: "enrichProperty",
+        structure: 
+`<enrich>
+    <source type="property" property="${properties(2)}"/>
+    <target type="\${4|property,body|}" property="${properties(5)}"/>
 </enrich>`
     },
     {
@@ -195,6 +204,23 @@ export let getWsoMediatorsValues = ()=>{
     },{
         mediator: '$ctx:',
         structure: `"${properties(1)}"`
+    },
+    {
+        mediator: 'log200',
+        structure: `<log level="custom">\n\t<property name="--------------------- = 200" value="---------------------"/>\n</log>`
+    },
+    {
+        mediator: 'log404',
+        structure: `<log level="custom">\n\t<property name="--------------------- = 404" value="---------------------"/>\n</log>`
+    },
+    {
+        mediator: 'log500',
+        structure: `<log level="custom">\n\t<property name="--------------------- = 500" value="---------------------"/>\n</log>`
+    },{
+        mediator: 'else',
+        structure: `<else${elseMed(1)}`
     }
+                                            
+
     ]
 }

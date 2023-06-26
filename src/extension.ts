@@ -85,6 +85,7 @@ export const fileCreationEventListener = ()=>{
 		const createdFiles = event.files;
 
 		let fileName = ''
+		let finalFileName = '';
 		let type: 'api'|  'sequence' | 'local-entries' | 'message-processors' | 'message-stores' | 'tasks' | 'templates' | 'Desconhecido' = 'api'
 		console.log('criação do arquivo')
         for (const file of createdFiles) {
@@ -96,13 +97,18 @@ export const fileCreationEventListener = ()=>{
 			console.log('O tipo do arquivo criado foi', type)
 			structure = builder.createResource[type]({name: fileName, type});
 
-			let finalFileName = dirname + '\\' + builder.assertFileName(fileName, type)
+			if(! fileName.toLowerCase().includes(type.toLowerCase()) || fileName.charAt(0).toUpperCase() != fileName.charAt(0)){
+				// builder.appendDocumentation(fileName, type)
+				finalFileName = dirname + '\\' + builder.assertFileName(fileName, type)
+				fs.createFileSync(file.fsPath)
+				fs.renameSync(file.fsPath, finalFileName)
+				fs.appendFileSync(finalFileName, structure);
+			} else{
+				fs.writeFile(file.fsPath, structure)
+			}
 
-			console.log(finalFileName)
-			// builder.appendDocumentation(fileName, type)
-			fs.writeFileSync(finalFileName, structure);
         }
-		
+		console.log(finalFileName)
 		console.log('warning devido a criação de', fileName)
 		pomCreationWarn(type, fileName)
 	});

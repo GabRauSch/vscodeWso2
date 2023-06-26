@@ -4,6 +4,7 @@ import * as xmlReader from 'xml2js'
 import * as pluralize from 'pluralize'
 import path from 'path';
 import * as prettier from 'prettier'
+import { findFileOrFolderWith } from './findFiles';
 
 let workspaceFolders = vscode.workspace.workspaceFolders;
 let workspaceFolder = '';
@@ -24,10 +25,10 @@ export type VariablesObject ={
 }
 
 export const variablesObject: VariablesObject = {
-    artifactId:"teste",
-    name: 'teste',
-    description: 'teste',
-    groupId: "br.com.intelbras.crm",
+    artifactId:"",
+    name: '',
+    description: '',
+    groupId: "",
     resources: [],
     connectorRegistry: [],
     version: 'v1'
@@ -44,7 +45,7 @@ export const createVariablesObject = (root?: string) =>{
     return variablesObject;
 }
 
-const normalizeName = (name: string) =>{
+export const normalizeName = (name: string) =>{
     const singularName = pluralize.singular(name);
     const nameParts = singularName.split('-');
     const normalizedName = nameParts
@@ -57,7 +58,7 @@ const normalizeName = (name: string) =>{
 
 const getContentFromResources = ()=>{   
     console.log('Pegando conteudos do resources (transforms, datamappers, etc...)')
-    let resourcesPath = workspaceFolder + '\\crmIntegrationRegistryResources\\'
+    let resourcesPath = findFileOrFolderWith(workspaceFolder, 'RegistryResources')
     let resources: any = fs.readdirSync(resourcesPath);
     
     const trash: string[] = [".classpath", ".meta", ".project", ".settings", "artifact.xml", "pom.xml"];
@@ -75,8 +76,8 @@ const getContentFromResources = ()=>{
 
 const getContentFromSynapseConfig = ()=>{
     console.log('Pegando conteudos do Synapse config (APIS, Sequences, etc...)')
-    
-    let resourcesPath = workspaceFolder + '\\crmIntegrationConfigs\\src\\main\\synapse-config'
+    let synapse = '\\src\\main\\synapse-config'
+    let resourcesPath = findFileOrFolderWith(workspaceFolder, 'Configs') + synapse
     let resources: any = fs.readdirSync(resourcesPath);
 
     resources.forEach((resource: string)=> {
@@ -89,8 +90,6 @@ const getContentFromSynapseConfig = ()=>{
         resourceItem.forEach((resourceFile)=>{
             let finalPath = folderPath + '\\' + resourceFile;
             let xmlFile = fs.readFileSync(finalPath)
-
-            console.log(xmlFile)
             if(xmlFile.byteLength != 0){
                 xmlReader.parseString(xmlFile, (err, result)=>{
                     let finalResourceName: string;

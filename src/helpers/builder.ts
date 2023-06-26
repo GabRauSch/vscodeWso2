@@ -2,9 +2,10 @@ import * as vscode from 'vscode'
 import * as fs from 'fs-extra'
 import * as xmlReader from 'xml2js'
 import * as pluralize from 'pluralize'
-import path from 'path';
+import path, { normalize } from 'path';
 import * as prettier from 'prettier';
-import { variablesObject } from './configVariablesObject';
+import { normalizeName, variablesObject } from './configVariablesObject';
+import { findFileOrFolderWith } from './findFiles';
 let workspaceFolders = vscode.workspace.workspaceFolders;
 let workspaceFolder = '';
 if (workspaceFolders && workspaceFolders.length > 0) {
@@ -42,7 +43,7 @@ export const createDependenciesPattern = ()=>{
 }
 
 export const getConnectorRegistry = (resource: any[])=>{
-    let resourcesPath = workspaceFolder + '\\crmIntegrationConnectorExporter\\'
+    let resourcesPath = findFileOrFolderWith(workspaceFolder, 'ConnectorExporter')
     let resources: any = fs.readdirSync(resourcesPath,);
     
     const trash: string[] = [".classpath", ".meta", ".project", ".settings", "artifact.xml", "pom.xml"];
@@ -214,11 +215,17 @@ export const createWso2Json = (basedir: string, content = wso2Objectbase)=>{
 }
 
 export const assertFileName = (fileName: string, fileType: string)=>{
-    let transformedFile;
-    if(! fileName.toLowerCase().includes(fileType.toLowerCase())){
-        let transformedStr = fileType.charAt(0).toUpperCase() + fileName.slice(1);
-        transformedFile = fileName.replace('.xml', transformedStr)
-    }
-    console.log(transformedFile)
+    fileType = normalizeName(fileType)
+
+    console.log(fileType, fileType.normalize())
+    let fyleTypePattern = fileType.charAt(0).toUpperCase() + fileType.slice(1); // api --> A+pi
+
+    let fileWTXml = fileName.replace('.xml', '') // abc.xml --> 'abc
+    let transformedFile = fileWTXml.charAt(0).toUpperCase() + fileWTXml.slice(1) // abc --> Abc
+    
+    transformedFile += fyleTypePattern + '.xml'; // abc --> Abc+Api+.xml
+    
+    console.log('parece que', transformedFile)
+    vscode.window.showErrorMessage('Ao criar uma ' + fileType + ' utilize a inicial maiuscula e o nome' + fyleTypePattern)
     return transformedFile
 }
