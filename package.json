@@ -3,6 +3,7 @@
   "displayName": "wso2 VsCode Extension",
   "description": "an extension for developing with wso2 in visual studio code",
   "version": "0.0.1",
+  "publisher": "GabrielRaulino",
   "engines": {
     "vscode": "^1.79.0"
   },
@@ -60,6 +61,7 @@
     "@typescript-eslint/eslint-plugin": "^5.59.8",
     "@typescript-eslint/parser": "^5.59.8",
     "@vscode/test-electron": "^2.3.2",
+    "@vscode/vsce": "^2.19.0",
     "eslint": "^8.41.0",
     "glob": "^8.1.0",
     "mocha": "^10.2.0",
